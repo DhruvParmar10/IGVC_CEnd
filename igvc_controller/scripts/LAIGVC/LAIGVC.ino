@@ -1,7 +1,6 @@
 #include <ros.h>
 #include <std_msgs/Float32.h>
 
-
 ros::NodeHandle  nh;
 std_msgs::Float32 avg_msg;
 
@@ -13,12 +12,10 @@ void avgCallback(const std_msgs::Float32& msg)
 {
   offsetFinal = msg.data;
 }
-
 void accCallback(const std_msgs::Float32& msg)
 {
   acc = msg.data;
 }
-
 void steerCallback(const std_msgs::Float32& msg)
 {
   steer = msg.data;
@@ -96,8 +93,8 @@ void loop()
 
   Serial.println(offsetFinal); // Display offsetFinal in the serial monitor
   
-  int motorSpeed = map(acc, -1, 1, 255, 0);
-  int motorSteer = map(steer, -1, 1, 255, 0);
+  int motorSpeed = map(acc, 1, -1, 0, 255);
+  int motorSteer = map(steer, -1, 1, 0, 255);
   if(offsetFinal != 15000){
     if (offsetFinal > 0)
     {
@@ -122,7 +119,7 @@ void loop()
       digitalWrite(motor2IN2, LOW);
       analogWrite(motor2PWM, motorSpeed);
       if (motorSteer > 126){
-        digitalWrite(motor1PWM, motorSteer);
+        digitalWrite(motor1PWM, 50);
         digitalWrite(motor1IN1, HIGH);
         digitalWrite(motor1IN2, LOW);
 
@@ -135,7 +132,7 @@ void loop()
         digitalWrite(motor1IN1, HIGH);
         digitalWrite(motor1IN2, LOW);
 
-        digitalWrite(motor2PWM, motorSteer);
+        digitalWrite(motor2PWM, 50);
         digitalWrite(motor2IN1, HIGH);
         digitalWrite(motor2IN2, LOW);
       }
