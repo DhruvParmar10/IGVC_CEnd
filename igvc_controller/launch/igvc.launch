@@ -1,3 +1,4 @@
 <launch>
-    <node pkg="igvc_controller" type="controller_moniter.py" name="controller_monitor" output="screen"/>
+    <node pkg="igvc_controller" type="controller_monitor.py" name="controller_monitor" output="screen"/>
+    <node pkg="joy" type="joy_node" name="joy_monitor" output="screen"/>
 </launch>

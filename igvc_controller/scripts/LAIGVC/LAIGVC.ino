@@ -5,21 +5,28 @@
 ros::NodeHandle  nh;
 std_msgs::Float32 avg_msg;
 
-float offsetFinal = 0;
+float offsetFinal = 15000;
 float acc = 0;
+float steer = 0;
 
 void avgCallback(const std_msgs::Float32& msg)
 {
   offsetFinal = msg.data;
 }
 
-void joyCallback(const std_msgs::Float32& msg)
+void accCallback(const std_msgs::Float32& msg)
 {
   acc = msg.data;
 }
 
+void steerCallback(const std_msgs::Float32& msg)
+{
+  steer = msg.data;
+}
+
 ros::Subscriber<std_msgs::Float32> off("/float_data", &avgCallback);
-ros::Subscriber<std_msgs::Float32> joy("/robot_control_topic", &avgCallback);
+ros::Subscriber<std_msgs::Float32> Accelaration("/robot_acc_topic", &accCallback);
+ros::Subscriber<std_msgs::Float32> Steering("/robot_acc_topic", &accCallback);
 
 const int motor1IN1 = 11;
 const int motor1IN2 = 9;
@@ -47,7 +54,8 @@ void setup()
 
   nh.initNode();
   nh.subscribe(off);
-  nh.subscribe(joy); 
+  nh.subscribe(Accelaration);
+  nh.subscribe(Steering); 
 }
 
 void forward()
@@ -88,8 +96,9 @@ void loop()
 
   Serial.println(offsetFinal); // Display offsetFinal in the serial monitor
   
-  int motorSpeed = map(acc, -1, 1, 0, 255);
-  if(offsetFinal != 0){
+  int motorSpeed = map(acc, -1, 1, 255, 0);
+  int motorSteer = map(steer, -1, 1, 255, 0);
+  if(offsetFinal != 15000){
     if (offsetFinal > 0)
     {
       right();
@@ -106,14 +115,32 @@ void loop()
     
     if (motorSpeed > 50) {  // Adjust the threshold value as needed
       // Control motors based on the received value
-      digitalWrite(motor1PWM, motorSpeed);
       digitalWrite(motor1IN1, HIGH);
       digitalWrite(motor1IN2, LOW);
-
-      digitalWrite(motor2PWM, motorSpeed);
+      analogWrite(motor1PWM, motorSpeed);
       digitalWrite(motor2IN1, HIGH);
       digitalWrite(motor2IN2, LOW);
-    } else {
+      analogWrite(motor2PWM, motorSpeed);
+      if (motorSteer > 126){
+        digitalWrite(motor1PWM, motorSteer);
+        digitalWrite(motor1IN1, HIGH);
+        digitalWrite(motor1IN2, LOW);
+
+        digitalWrite(motor2PWM, motorSteer);
+        digitalWrite(motor2IN1, HIGH);
+        digitalWrite(motor2IN2, LOW);
+      } 
+      else {
+        digitalWrite(motor1PWM, motorSteer);
+        digitalWrite(motor1IN1, HIGH);
+        digitalWrite(motor1IN2, LOW);
+
+        digitalWrite(motor2PWM, motorSteer);
+        digitalWrite(motor2IN1, HIGH);
+        digitalWrite(motor2IN2, LOW);
+      }
+    }
+    else{
       // Stop the motors if the value is below a certain threshold
       analogWrite(motor1PWM, 0);
       analogWrite(motor2PWM, 0);

@@ -21,7 +21,9 @@ if __name__ == "__main__":
     if controller_connected == True:
         # Run node A
         rospy.loginfo("Launching Node Controller")
-        Popen(['rosrun', 'igvc_controller', 'controller_processing.py'])
+        Popen(['rosrun', 'joy', 'joy_node'])
+        Popen(['rosrun', 'igvc_controller', 'controllerv2.py'])
+
     else:
         # Run node B
         rospy.loginfo("Launching Node Self-Driving")
