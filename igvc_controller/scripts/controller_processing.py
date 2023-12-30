@@ -39,7 +39,6 @@ class ControllerInputs():
 def main():
     devices = [InputDevice(path) for path in list_devices()]
     ds4 = None
-    # param = rospy.get_param("/igvc_controller")
 
     for dev in devices:
         if dev.name == 'Sony Computer Entertainment Wireless Controller':
@@ -68,7 +67,6 @@ def main():
                 controller.handle_button(event)
 
             rospy.loginfo(controller.action)
-            # rospy.get_param('/igvc_controller_param')
             pub.publish(controller.action)
             rate.sleep()
 
