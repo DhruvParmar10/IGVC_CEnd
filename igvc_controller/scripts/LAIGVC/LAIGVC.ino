@@ -1,27 +1,25 @@
 #include <ros.h>
-#include <std_msgs/Empty.h>
 #include <std_msgs/Float32.h>
-#include <std_msgs/Bool.h>
 
 
 ros::NodeHandle  nh;
-
 std_msgs::Float32 avg_msg;
+
 float offsetFinal = 0;
-bool kill = false;
+float acc = 0;
 
 void avgCallback(const std_msgs::Float32& msg)
 {
   offsetFinal = msg.data;
 }
 
-void killCallback(const std_msgs::Bool& msg)
+void joyCallback(const std_msgs::Float32& msg)
 {
-  kill = msg.data;
+  acc = msg.data;
 }
 
-ros::Subscriber<std_msgs::Float32> sub("/float_data", &avgCallback);
-ros::Subscriber<std_msgs::Float32> sub("/exit", &killCallback);
+ros::Subscriber<std_msgs::Float32> off("/float_data", &avgCallback);
+ros::Subscriber<std_msgs::Float32> joy("/robot_control_topic", &avgCallback);
 
 const int motor1IN1 = 11;
 const int motor1IN2 = 9;
@@ -48,7 +46,8 @@ void setup()
   pinMode(motor2PWM, OUTPUT);
 
   nh.initNode();
-  nh.subscribe(sub); 
+  nh.subscribe(off);
+  nh.subscribe(joy); 
 }
 
 void forward()
@@ -81,15 +80,6 @@ void right() {
   digitalWrite(motor2IN2, LOW);
 }
 
-void emergencyKill() {
-  digitalWrite(motor1IN1, LOW);
-  digitalWrite(motor1IN2, LOW);
-  analogWrite(motor1PWM, 0);
-  
-  digitalWrite(motor2IN1, LOW);
-  digitalWrite(motor2IN2, LOW);
-  analogWrite(motor2PWM, 0);
-}
 
 void loop()
 {  
@@ -97,20 +87,36 @@ void loop()
   delay(1);
 
   Serial.println(offsetFinal); // Display offsetFinal in the serial monitor
-  if(kill == true){
-    emergencyKill();
-  }else{
+  
+  int motorSpeed = map(acc, -1, 1, 0, 255);
+  if(offsetFinal != 0){
     if (offsetFinal > 0)
     {
-    right();
+      right();
     }
     else if (offsetFinal < 0)
     {
-    left();
+      left();
     }
     else{
-    forward();
+      forward();
     }
   }
-  
+  else {
+    
+    if (motorSpeed > 50) {  // Adjust the threshold value as needed
+      // Control motors based on the received value
+      digitalWrite(motor1PWM, motorSpeed);
+      digitalWrite(motor1IN1, HIGH);
+      digitalWrite(motor1IN2, LOW);
+
+      digitalWrite(motor2PWM, motorSpeed);
+      digitalWrite(motor2IN1, HIGH);
+      digitalWrite(motor2IN2, LOW);
+    } else {
+      // Stop the motors if the value is below a certain threshold
+      analogWrite(motor1PWM, 0);
+      analogWrite(motor2PWM, 0);
+    }
+  }  
 }
