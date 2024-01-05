@@ -2,41 +2,41 @@
 #include <std_msgs/Float32.h>
 
 ros::NodeHandle  nh;
-std_msgs::Float32 avg_msg;
+std_msgs::Float32 float_msg;
 
-float offsetFinal = 15000;
-float acc = 0;
-float steer = 0;
+float offsetFinal = 15000.0;
+float acc = 1.0;
+float steer = 0.0;
 
 void avgCallback(const std_msgs::Float32& msg)
 {
   offsetFinal = msg.data;
 }
-void accCallback(const std_msgs::Float32& msg)
+
+void rightCallback(const std_msgs::Float32& msg)
 {
-  acc = msg.data;
+  right = msg.data;
 }
-void steerCallback(const std_msgs::Float32& msg)
+
+void leftCallback(const std_msgs::Float32& msg)
 {
-  steer = msg.data;
+  left = msg.data;
 }
 
 ros::Subscriber<std_msgs::Float32> off("/float_data", &avgCallback);
-ros::Subscriber<std_msgs::Float32> Accelaration("/robot_acc_topic", &accCallback);
-ros::Subscriber<std_msgs::Float32> Steering("/robot_acc_topic", &accCallback);
+ros::Subscriber<std_msgs::Float32> lft("/robot_right_topic", &rightCallback);
+ros::Subscriber<std_msgs::Float32> rht("/robot_left_topic", &leftCallback);
 
 const int motor1IN1 = 11;
-const int motor1IN2 = 9;
+const int motor1IN2 = 9;  
 const int motor1PWM = 13;
 const int motor2IN1 = 10;
 const int motor2IN2 = 8;
 const int motor2PWM = 12;
 
-int pwm = 140;
+int pwm = 255;
 int pwm1 = 84;
 int pwm2 = 84;
-float offset = 0;
-
 
 void setup()
 {
@@ -51,8 +51,8 @@ void setup()
 
   nh.initNode();
   nh.subscribe(off);
-  nh.subscribe(Accelaration);
-  nh.subscribe(Steering); 
+  nh.subscribe(lft);
+  nh.subscribe(rht); 
 }
 
 void forward()
@@ -91,56 +91,36 @@ void loop()
   nh.spinOnce();
   delay(1);
 
-  Serial.println(offsetFinal); // Display offsetFinal in the serial monitor
-  
-  int motorSpeed = map(acc, 1, -1, 0, 255);
-  int motorSteer = map(steer, -1, 1, 0, 255);
-  if(offsetFinal != 15000){
-    if (offsetFinal > 0)
-    {
-      right();
-    }
-    else if (offsetFinal < 0)
-    {
-      left();
-    }
-    else{
-      forward();
-    }
+  Serial.println(offsetFinal);
+  int motorLeft = map(acc, 1, -1, 0, 205);
+  int motorRight = map(steer, 1, -1, 0, 205);
+  if (offsetFinal > 0)
+  {
+    right();
   }
-  else {
-    
-    if (motorSpeed > 50) {  // Adjust the threshold value as needed
-      // Control motors based on the received value
+  else if (offsetFinal < 0)
+  {
+    left();
+  }
+  else{
+    forward();
+  }
+  
+  if (motorLeft > 50 || motorRight > 50) {
       digitalWrite(motor1IN1, HIGH);
       digitalWrite(motor1IN2, LOW);
-      analogWrite(motor1PWM, motorSpeed);
+      analogWrite(motor1PWM, motorRight); // right wheel
       digitalWrite(motor2IN1, HIGH);
       digitalWrite(motor2IN2, LOW);
-      analogWrite(motor2PWM, motorSpeed);
-      if (motorSteer > 126){
-        digitalWrite(motor1PWM, 50);
-        digitalWrite(motor1IN1, HIGH);
-        digitalWrite(motor1IN2, LOW);
-
-        digitalWrite(motor2PWM, motorSteer);
-        digitalWrite(motor2IN1, HIGH);
-        digitalWrite(motor2IN2, LOW);
-      } 
-      else {
-        digitalWrite(motor1PWM, motorSteer);
-        digitalWrite(motor1IN1, HIGH);
-        digitalWrite(motor1IN2, LOW);
-
-        digitalWrite(motor2PWM, 50);
-        digitalWrite(motor2IN1, HIGH);
-        digitalWrite(motor2IN2, LOW);
-      }
-    }
-    else{
+      analogWrite(motor2PWM, motorLeft); // left wheel
+  }
+  else{
       // Stop the motors if the value is below a certain threshold
+      digitalWrite(motor1IN1, HIGH);
+      digitalWrite(motor1IN2, LOW);
       analogWrite(motor1PWM, 0);
+      digitalWrite(motor2IN1, HIGH);
+      digitalWrite(motor2IN2, LOW);
       analogWrite(motor2PWM, 0);
-    }
-  }  
+  }
 }
