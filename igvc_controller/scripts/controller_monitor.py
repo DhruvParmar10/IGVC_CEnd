@@ -22,7 +22,8 @@ if __name__ == "__main__":
         # Run node A
         rospy.loginfo("Launching Node Controller")
         Popen(['rosrun', 'joy', 'joy_node'])
-        Popen(['rosrun', 'igvc_controller', 'controllerv2.py'])
+        Popen(['rosrun', 'igvc_controller', 'controllerL2.py'])
+        Popen(['rosrun', 'igvc_controller', 'controllerR2.py'])
 
     else:
         # Run node B
